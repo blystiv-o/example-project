@@ -1,0 +1,15 @@
+.git
+.github
+.idea
+.turbo
+.env
+.env.*
+!.env.example
+**/node_modules
+**/dist
+**/.next
+**/coverage
+logs
+docs
+observability
+*.log

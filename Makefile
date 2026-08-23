@@ -3,6 +3,9 @@ DEV_PROCESS_PATTERN := [t]urbo run dev|[n]ext dev|[n]est.*start.*--watch
 
 .PHONY: stop
 
+include .env
+export
+
 stop:
 	@echo "Зупинка web та API..."
 	@found=0; \
@@ -21,3 +24,24 @@ stop:
 	@echo "Зупинка Docker-сервісів..."
 	@docker compose down --remove-orphans
 	@echo "Проєкт зупинено."
+
+web-build:
+	docker buildx build \
+	  --platform linux/amd64 \
+	  -f apps/web/Dockerfile \
+	  -t "$(ECR_REPO)/money-tracker/web:latest" \
+	  .
+
+web-push:
+	docker push "$(ECR_REPO)/money-tracker/web:latest"
+
+api-build:
+	docker buildx build \
+	  --platform linux/amd64 \
+	  -f apps/api/Dockerfile \
+	  -t "$(ECR_REPO)/money-tracker/api:latest" \
+	  .
+
+api-push:
+	docker tag money-tracker-api:latest \
+      "$(ECR_REPO)/money-tracker/api:latest"
