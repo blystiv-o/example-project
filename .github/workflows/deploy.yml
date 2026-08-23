@@ -134,20 +134,24 @@ jobs:
           printf '%s\n' "$SSH_KNOWN_HOSTS" > "$ssh_directory/known_hosts"
           chmod 600 "$ssh_directory/deploy_key" "$ssh_directory/known_hosts"
 
-          ssh \
+          ssh_options=(
             -i "$ssh_directory/deploy_key" \
             -p "$SSH_PORT" \
             -o BatchMode=yes \
             -o IdentitiesOnly=yes \
             -o StrictHostKeyChecking=yes \
-            -o UserKnownHostsFile="$ssh_directory/known_hosts" \
-            "$DEPLOY_USER@$EC2_HOST" \
-            bash -s -- "$PROJECT_DIR" "$AWS_REGION" "$ECR_REGISTRY" <<'REMOTE'
+            -o UserKnownHostsFile="$ssh_directory/known_hosts"
+          )
+
+          aws ecr get-login-password --region "$AWS_REGION" \
+            | ssh "${ssh_options[@]}" "$DEPLOY_USER@$EC2_HOST" \
+                docker login --username AWS --password-stdin "$ECR_REGISTRY"
+
+          ssh "${ssh_options[@]}" "$DEPLOY_USER@$EC2_HOST" \
+            bash -s -- "$PROJECT_DIR" <<'REMOTE'
           set -Eeuo pipefail
 
           project_dir=$1
-          aws_region=$2
-          ecr_registry=$3
 
-          bash "$project_dir/scripts/deploy-ec2.sh" "$aws_region" "$ecr_registry"
+          bash "$project_dir/scripts/deploy-ec2.sh"
           REMOTE

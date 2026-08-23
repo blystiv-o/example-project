@@ -128,8 +128,8 @@ AWS access keys і production `.env` у GitHub не потрібні. Не ви�
 
 ### Підготовка EC2
 
-- EC2 instance profile має містити read-only доступ до двох ECR repositories (`ecr:GetAuthorizationToken`, `ecr:BatchGetImage`, `ecr:GetDownloadUrlForLayer`, `ecr:BatchCheckLayerAvailability`). SSM-права не потрібні.
-- Встановіть AWS CLI v2, Docker із Compose plugin і `curl`.
+- ECR login виконує GitHub runner і передає короткоживучий Docker token на EC2 через SSH stdin. EC2 instance profile та AWS CLI для деплою не потрібні.
+- Встановіть Docker із Compose plugin і `curl`.
 - Додайте `EC2_DEPLOY_USER` до групи `docker`.
 - Розмістіть `compose.production.yml`, `scripts/deploy-ec2.sh`, `observability/alloy/config.alloy` і `.env.production` у `EC2_PROJECT_DIR`. GitHub Actions не оновлює ці файли автоматично.
 - Надайте `.env.production` права `600` і переконайтеся, що зовнішня мережа `observability_observability` існує.
