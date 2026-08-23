@@ -19,7 +19,7 @@ services:
       - application
 
   migrate:
-    image: ${ECR_REGISTRY:?Set ECR_REGISTRY}/money-tracker/api:${API_IMAGE_TAG:-latest}
+    image: ${ECR_REGISTRY:?Set ECR_REGISTRY}/money-tracker/api:latest
     pull_policy: always
     command: ['node', 'dist/database/migrate.js']
     restart: 'no'
@@ -32,7 +32,7 @@ services:
       - application
 
   api:
-    image: ${ECR_REGISTRY:?Set ECR_REGISTRY}/money-tracker/api:${API_IMAGE_TAG:-latest}
+    image: ${ECR_REGISTRY:?Set ECR_REGISTRY}/money-tracker/api:latest
     pull_policy: always
     restart: unless-stopped
     environment:
@@ -59,7 +59,7 @@ services:
       - application
 
   web:
-    image: ${ECR_REGISTRY:?Set ECR_REGISTRY}/money-tracker/web:${WEB_IMAGE_TAG:-latest}
+    image: ${ECR_REGISTRY:?Set ECR_REGISTRY}/money-tracker/web:latest
     pull_policy: always
     restart: unless-stopped
     environment:

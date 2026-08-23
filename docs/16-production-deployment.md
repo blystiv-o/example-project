@@ -40,13 +40,13 @@ Workflow `.github/workflows/deploy.yml` запускається після push
 
 1. перевіряє lint, типи й тести;
 2. паралельно збирає `api` і `web` для `linux/amd64`;
-3. завантажує образи в ECR із незмінним тегом повного Git commit SHA;
+3. завантажує образи в ECR із тегом `latest`;
 4. через SSH запускає наявний на EC2 `scripts/deploy-ec2.sh` без оновлення Git repository;
 5. запускає міграції, оновлює контейнери й перевіряє health endpoints.
 
-> **Тимчасово:** production-деплой `web` вимкнено в `scripts/deploy-ec2.sh`. Web-образ збирається та завантажується в ECR, але web-контейнер і `WEB_IMAGE_TAG` на EC2 не оновлюються.
+> **Тимчасово:** production-деплой `web` вимкнено в `scripts/deploy-ec2.sh`. Web-образ збирається та завантажується в ECR, але web-контейнер на EC2 не оновлюється.
 
-Одночасно може виконуватися лише один production-деплой. Якщо запуск або healthcheck неуспішний, deploy-скрипт намагається повернути попередні образи. Міграції БД мають бути backward-compatible, оскільки автоматичний rollback SQL-схеми не виконується.
+Одночасно може виконуватися лише один production-деплой. Deploy явно виконує `docker compose pull`, тому локально закешований `latest` не використовується. Автоматичного rollback образу або SQL-схеми немає, тому міграції БД мають бути backward-compatible.
 
 ### GitHub Environment і variables
 

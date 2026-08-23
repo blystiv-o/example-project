@@ -78,7 +78,7 @@ jobs:
           file: apps/${{ matrix.service }}/Dockerfile
           platforms: linux/amd64
           push: true
-          tags: ${{ steps.ecr.outputs.registry }}/money-tracker/${{ matrix.service }}:${{ github.sha }}
+          tags: ${{ steps.ecr.outputs.registry }}/money-tracker/${{ matrix.service }}:latest
           cache-from: type=gha,scope=${{ matrix.service }}
           cache-to: type=gha,mode=max,scope=${{ matrix.service }}
 
@@ -109,7 +109,6 @@ jobs:
           SSH_PORT: ${{ vars.EC2_SSH_PORT }}
           PROJECT_DIR: ${{ vars.EC2_PROJECT_DIR }}
           DEPLOY_USER: ${{ vars.EC2_DEPLOY_USER }}
-          DEPLOY_SHA: ${{ github.sha }}
           ECR_REGISTRY: ${{ steps.aws.outputs.account_id }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
           SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           SSH_KNOWN_HOSTS: ${{ secrets.EC2_KNOWN_HOSTS }}
@@ -143,13 +142,12 @@ jobs:
             -o StrictHostKeyChecking=yes \
             -o UserKnownHostsFile="$ssh_directory/known_hosts" \
             "$DEPLOY_USER@$EC2_HOST" \
-            bash -s -- "$PROJECT_DIR" "$DEPLOY_SHA" "$AWS_REGION" "$ECR_REGISTRY" <<'REMOTE'
+            bash -s -- "$PROJECT_DIR" "$AWS_REGION" "$ECR_REGISTRY" <<'REMOTE'
           set -Eeuo pipefail
 
           project_dir=$1
-          deploy_sha=$2
-          aws_region=$3
-          ecr_registry=$4
+          aws_region=$2
+          ecr_registry=$3
 
-          bash "$project_dir/scripts/deploy-ec2.sh" "$deploy_sha" "$aws_region" "$ecr_registry"
+          bash "$project_dir/scripts/deploy-ec2.sh" "$aws_region" "$ecr_registry"
           REMOTE
