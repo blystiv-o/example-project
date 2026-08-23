@@ -110,6 +110,7 @@ AWS access keys і production `.env` у GitHub не потрібні. Не ви�
     {
       "Effect": "Allow",
       "Action": [
+        "ecr:BatchGetImage",
         "ecr:BatchCheckLayerAvailability",
         "ecr:CompleteLayerUpload",
         "ecr:InitiateLayerUpload",
