@@ -10,11 +10,13 @@ import { DashboardModule } from '@/dashboard/dashboard.module';
 import { ExpensesModule } from '@/expenses/expenses.module';
 import { HealthModule } from '@/health/health.module';
 import { UsersModule } from '@/users/users.module';
+import { VersionModule } from '@/version/version.module';
 
 @Module({
   imports: [
     DatabaseModule,
     HealthModule,
+    VersionModule,
     AuthModule,
     UsersModule,
     CategoriesModule,

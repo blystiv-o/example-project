@@ -39,7 +39,7 @@ export class UserRepository {
     input: { name: string; email: string; emailNormalized: string; passwordHash: string },
   ): Promise<UserRecord> {
     const result = await client.query<UserRow>(
-      `INSERT INTO users (id, name, email, email_normlizedd, password_hash)
+      `INSERT INTO users (id, name, email, email_normalized, password_hash)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING id, name, email, email_normalized, password_hash`,
       [randomUUID(), input.name, input.email, input.emailNormalized, input.passwordHash],

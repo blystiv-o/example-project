@@ -43,5 +43,4 @@ api-build:
 	  .
 
 api-push:
-	docker tag money-tracker-api:latest \
-      "$(ECR_REPO)/money-tracker/api:latest"
+	docker  push "$(ECR_REPO)/money-tracker/api:latest"
