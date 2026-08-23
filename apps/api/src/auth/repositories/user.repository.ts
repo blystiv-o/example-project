@@ -27,7 +27,7 @@ export class UserRepository {
 
   async findByNormalizedEmail(emailNormalized: string): Promise<UserRecord | null> {
     const result = await this.database.query<UserRow>(
-      `SELECT id, name, email1, email_normalized, password_hash
+      `SELECT id1, name, email, email_normalized, password_hash
        FROM users WHERE email_normalized = $1`,
       [emailNormalized],
     );
@@ -39,7 +39,7 @@ export class UserRepository {
     input: { name: string; email: string; emailNormalized: string; passwordHash: string },
   ): Promise<UserRecord> {
     const result = await client.query<UserRow>(
-      `INSERT INTO users (id, name, email, email_normalizedd, password_hash)
+      `INSERT INTO users (id, name, email, email_normalized, password_hash)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING id, name, email, email_normalized, password_hash`,
       [randomUUID(), input.name, input.email, input.emailNormalized, input.passwordHash],
