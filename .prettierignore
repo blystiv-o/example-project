@@ -1,0 +1,10 @@
+AGENTS.md
+apps/web/next-env.d.ts
+docs/
+node_modules/
+dist/
+.next/
+coverage/
+.turbo/
+package-lock.json
+observability/alloy/config.alloy

@@ -1,0 +1,45 @@
+{
+  "name": "money-tracker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "npm@10.9.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "predev": "node scripts/check-node-version.mjs",
+    "dev": "turbo run dev",
+    "dev:web": "turbo run dev --filter=@money-tracker/web",
+    "dev:api": "turbo run dev --filter=@money-tracker/api",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:up": "docker compose up -d postgres",
+    "db:down": "docker compose down",
+    "db:migrate": "npm run db:migrate --workspace @money-tracker/api",
+    "alloy:up": "docker compose up -d alloy",
+    "alloy:down": "docker compose stop alloy",
+    "alloy:logs": "docker compose logs -f alloy"
+  },
+  "engines": {
+    "node": ">=22.13",
+    "npm": ">=10"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@next/eslint-plugin-next": "^16.2.12",
+    "eslint": "^9.0.0",
+    "eslint-config-prettier": "^10.0.0",
+    "globals": "^16.0.0",
+    "prettier": "^3.5.0",
+    "turbo": "^2.4.0",
+    "typescript": "^5.7.0",
+    "typescript-eslint": "^8.0.0",
+    "vitest": "^3.0.0"
+  }
+}

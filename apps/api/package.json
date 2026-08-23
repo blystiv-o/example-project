@@ -1,0 +1,36 @@
+{
+  "name": "@money-tracker/api",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "nest build",
+    "db:migrate": "ts-node src/database/migrate.ts",
+    "dev": "NODE_OPTIONS=--enable-source-maps nest start --watch",
+    "start": "node --enable-source-maps dist/main.js",
+    "lint": "eslint src --max-warnings=0",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@money-tracker/shared": "*",
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0",
+    "@nestjs/platform-express": "^11.0.0",
+    "argon2": "^0.45.1",
+    "dotenv": "^17.4.2",
+    "pg": "^8.22.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.0"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^11.0.0",
+    "@nestjs/testing": "^11.0.0",
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.0.0",
+    "@types/pg": "^8.20.3",
+    "@types/supertest": "^7.2.1",
+    "supertest": "^7.2.2",
+    "ts-loader": "^9.5.0",
+    "ts-node": "^10.9.0"
+  }
+}

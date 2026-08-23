@@ -1,0 +1,41 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-money_tracker}
+      POSTGRES_USER: ${POSTGRES_USER:-money_tracker}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-money_tracker}
+    ports:
+      - '5432:5432'
+    volumes:
+      - money-tracker-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  alloy:
+    image: grafana/alloy:${ALLOY_VERSION:-v1.18.0}
+    restart: unless-stopped
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    environment:
+      LOKI_TENANT_ID: ${LOKI_TENANT_ID:-tenant1}
+      LOKI_URL: ${LOKI_URL:-http://host.docker.internal:3101/loki/api/v1/push}
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    ports:
+      - '${ALLOY_PORT:-12346}:12345'
+    volumes:
+      - ./observability/alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - ./logs:/var/log/money-tracker:ro
+      - money-tracker-alloy:/var/lib/alloy/data
+
+volumes:
+  money-tracker-postgres:
+  money-tracker-alloy:

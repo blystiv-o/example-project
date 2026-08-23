@@ -1,0 +1,47 @@
+logging {
+  level  = "info"
+  format = "logfmt"
+}
+
+loki.source.file "api" {
+  targets = [
+    {
+      __path__ = "/var/log/money-tracker/api.log",
+      job      = "money-tracker-api",
+    },
+  ]
+
+  forward_to = [loki.process.api.receiver]
+
+  file_match {
+    enabled     = true
+    sync_period = "5s"
+  }
+}
+
+loki.process "api" {
+  stage.json {
+    expressions = {
+      environment = "environment",
+      level       = "level",
+      service     = "service",
+    }
+  }
+
+  stage.labels {
+    values = {
+      environment = "",
+      level       = "",
+      service     = "",
+    }
+  }
+
+  forward_to = [loki.write.local.receiver]
+}
+
+loki.write "local" {
+  endpoint {
+    url       = sys.env("LOKI_URL")
+    tenant_id = sys.env("LOKI_TENANT_ID")
+  }
+}
