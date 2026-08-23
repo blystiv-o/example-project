@@ -27,7 +27,7 @@ export class UserRepository {
 
   async findByNormalizedEmail(emailNormalized: string): Promise<UserRecord | null> {
     const result = await this.database.query<UserRow>(
-      `SELECT id, name, email, email_normalized, password_hash
+      `SELECT id, name, email1, email_normalized, password_hash
        FROM users WHERE email_normalized = $1`,
       [emailNormalized],
     );
