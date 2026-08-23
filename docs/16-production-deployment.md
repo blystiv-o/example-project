@@ -41,8 +41,10 @@ Workflow `.github/workflows/deploy.yml` запускається після push
 1. перевіряє lint, типи й тести;
 2. паралельно збирає `api` і `web` для `linux/amd64`;
 3. завантажує образи в ECR із незмінним тегом повного Git commit SHA;
-4. через AWS Systems Manager оновлює checkout на EC2 та запускає `scripts/deploy-ec2.sh`;
+4. через SSH оновлює checkout на EC2 та запускає `scripts/deploy-ec2.sh`;
 5. запускає міграції, оновлює контейнери й перевіряє health endpoints.
+
+> **Тимчасово:** production-деплой `web` вимкнено в `scripts/deploy-ec2.sh`. Web-образ збирається та завантажується в ECR, але web-контейнер і `WEB_IMAGE_TAG` на EC2 не оновлюються.
 
 Одночасно може виконуватися лише один production-деплой. Якщо запуск або healthcheck неуспішний, deploy-скрипт намагається повернути попередні образи. Міграції БД мають бути backward-compatible, оскільки автоматичний rollback SQL-схеми не виконується.
 
@@ -54,11 +56,19 @@ Workflow `.github/workflows/deploy.yml` запускається після push
 | --- | --- | --- |
 | `AWS_REGION` | `eu-central-1` | регіон ECR та EC2 |
 | `AWS_ROLE_ARN` | `arn:aws:iam::123456789012:role/money-tracker-github-actions` | роль, яку GitHub отримує через OIDC |
-| `EC2_INSTANCE_ID` | `i-0123456789abcdef0` | EC2 instance, зареєстрований у Systems Manager |
-| `EC2_PROJECT_DIR` | `/opt/money-tracker` | абсолютний шлях до git checkout на EC2 |
-| `EC2_DEPLOY_USER` | `ubuntu` | користувач із доступом до git repository та Docker; необов'язково, типово `ubuntu` |
+| `EC2_HOST` | `ec2-1-2-3-4.eu-central-1.compute.amazonaws.com` | public DNS або IP EC2 |
+| `EC2_SSH_PORT` | `22` | SSH-порт; необов'язково, типово `22` |
+| `EC2_PROJECT_DIR` | `/home/ec2-user/money-tracker` | абсолютний шлях до git checkout на EC2 |
+| `EC2_DEPLOY_USER` | `ec2-user` | SSH-користувач із доступом до git repository та Docker; необов'язково, типово `ec2-user` |
 
-AWS access keys, SSH-ключ і production `.env` у GitHub не потрібні.
+У GitHub Environment `production` додайте secrets:
+
+| Secret | Значення |
+| --- | --- |
+| `EC2_SSH_PRIVATE_KEY` | окремий приватний SSH-ключ для CI/CD у PEM/OpenSSH форматі |
+| `EC2_KNOWN_HOSTS` | перевірений рядок host key для EC2 з `known_hosts` |
+
+AWS access keys і production `.env` у GitHub не потрібні. Не використовуйте особистий SSH-ключ: створіть окрему пару для CI/CD, а public key додайте в `/home/ec2-user/.ssh/authorized_keys`.
 
 ### OIDC role для GitHub Actions
 
@@ -83,7 +93,7 @@ AWS access keys, SSH-ключ і production `.env` у GitHub не потрібн
 }
 ```
 
-Мінімальна permissions policy для workflow (замініть account, region та instance ID):
+Мінімальна permissions policy для workflow (замініть account і region):
 
 ```json
 {
@@ -110,22 +120,6 @@ AWS access keys, SSH-ключ і production `.env` у GitHub не потрібн
         "arn:aws:ecr:eu-central-1:123456789012:repository/money-tracker/api",
         "arn:aws:ecr:eu-central-1:123456789012:repository/money-tracker/web"
       ]
-    },
-    {
-      "Effect": "Allow",
-      "Action": "ssm:SendCommand",
-      "Resource": [
-        "arn:aws:ssm:eu-central-1::document/AWS-RunShellScript",
-        "arn:aws:ec2:eu-central-1:123456789012:instance/i-0123456789abcdef0"
-      ]
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "ssm:GetCommandInvocation",
-        "ssm:ListCommandInvocations"
-      ],
-      "Resource": "*"
     }
   ]
 }
@@ -133,13 +127,14 @@ AWS access keys, SSH-ключ і production `.env` у GitHub не потрібн
 
 ### Підготовка EC2
 
-- EC2 instance profile має містити `AmazonSSMManagedInstanceCore` і read-only доступ до двох ECR repositories (`ecr:GetAuthorizationToken`, `ecr:BatchGetImage`, `ecr:GetDownloadUrlForLayer`, `ecr:BatchCheckLayerAvailability`).
+- EC2 instance profile має містити read-only доступ до двох ECR repositories (`ecr:GetAuthorizationToken`, `ecr:BatchGetImage`, `ecr:GetDownloadUrlForLayer`, `ecr:BatchCheckLayerAvailability`). SSM-права не потрібні.
 - Встановіть AWS CLI v2, Docker із Compose plugin, Git і `curl`.
 - Додайте `EC2_DEPLOY_USER` до групи `docker` та налаштуйте для нього read-only доступ до GitHub repository.
 - Клонуйте repository у `EC2_PROJECT_DIR`, створіть там `.env.production` із правами `600` і переконайтеся, що зовнішня мережа `observability_observability` існує.
 - ECR repositories мають називатися `money-tracker/api` та `money-tracker/web`.
+- Security Group має дозволяти вхід на `EC2_SSH_PORT` від GitHub Actions runner. GitHub-hosted runners не мають сталої IP-адреси; для вузького allowlist використовуйте self-hosted runner або GitHub runner зі static IP.
 
-Перший деплой можна запустити в GitHub у Actions → CI/CD → Run workflow. Його результат і stdout/stderr SSM-команди будуть доступні в job `Deploy to EC2`.
+Перед збереженням `EC2_KNOWN_HOSTS` звірте fingerprint host key з `/etc/ssh/ssh_host_ed25519_key.pub` на EC2. Перший деплой можна запустити в GitHub у Actions → CI/CD → Run workflow; SSH-вивід буде доступний у job `Deploy to EC2`.
 
 ## Перевірка
 

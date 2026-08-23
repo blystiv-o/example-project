@@ -53,11 +53,10 @@ rollback() {
   local exit_code=$?
 
   trap - ERR
-  echo "Deployment failed; restoring images $old_api_tag and $old_web_tag." >&2
+  echo "Deployment failed; restoring API image $old_api_tag." >&2
   export API_IMAGE_TAG="$old_api_tag"
-  export WEB_IMAGE_TAG="$old_web_tag"
-  compose pull api web migrate || true
-  compose up -d --no-deps api web || true
+  compose pull api migrate || true
+  compose up -d --no-deps api || true
   exit "$exit_code"
 }
 
@@ -67,21 +66,22 @@ aws ecr get-login-password --region "$AWS_REGION" \
   | docker login --username AWS --password-stdin "$ECR_REGISTRY"
 
 export API_IMAGE_TAG="$IMAGE_TAG"
-export WEB_IMAGE_TAG="$IMAGE_TAG"
 
-compose pull api web migrate
+compose pull api migrate
 compose up -d postgres
 compose run --rm migrate
-compose up -d --no-deps api
-compose up -d --no-deps web
-compose up -d --no-deps --wait api web
+compose up -d --no-deps --wait api
+
+# TODO: тимчасово вимкнено production-деплой web.
+# compose pull web
+# compose up -d --no-deps --wait web
 
 curl --fail --silent --show-error --retry 6 --retry-delay 5 \
   http://127.0.0.1:3001/api/v1/health >/dev/null
-curl --fail --silent --show-error --retry 6 --retry-delay 5 \
-  http://127.0.0.1:3000/ >/dev/null
+# curl --fail --silent --show-error --retry 6 --retry-delay 5 \
+#   http://127.0.0.1:3000/ >/dev/null
 
-persist_image_tags "$IMAGE_TAG" "$IMAGE_TAG"
+persist_image_tags "$IMAGE_TAG" "$old_web_tag"
 trap - ERR
 
-echo "Successfully deployed $IMAGE_TAG."
+echo "Successfully deployed API $IMAGE_TAG; web deployment is disabled."
