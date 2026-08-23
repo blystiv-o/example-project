@@ -41,7 +41,7 @@ Workflow `.github/workflows/deploy.yml` запускається після push
 1. перевіряє lint, типи й тести;
 2. паралельно збирає `api` і `web` для `linux/amd64`;
 3. завантажує образи в ECR із незмінним тегом повного Git commit SHA;
-4. через SSH оновлює checkout на EC2 та запускає `scripts/deploy-ec2.sh`;
+4. через SSH запускає наявний на EC2 `scripts/deploy-ec2.sh` без оновлення Git repository;
 5. запускає міграції, оновлює контейнери й перевіряє health endpoints.
 
 > **Тимчасово:** production-деплой `web` вимкнено в `scripts/deploy-ec2.sh`. Web-образ збирається та завантажується в ECR, але web-контейнер і `WEB_IMAGE_TAG` на EC2 не оновлюються.
@@ -129,9 +129,10 @@ AWS access keys і production `.env` у GitHub не потрібні. Не ви�
 ### Підготовка EC2
 
 - EC2 instance profile має містити read-only доступ до двох ECR repositories (`ecr:GetAuthorizationToken`, `ecr:BatchGetImage`, `ecr:GetDownloadUrlForLayer`, `ecr:BatchCheckLayerAvailability`). SSM-права не потрібні.
-- Встановіть AWS CLI v2, Docker із Compose plugin, Git і `curl`.
-- Додайте `EC2_DEPLOY_USER` до групи `docker` та налаштуйте для нього read-only доступ до GitHub repository.
-- Клонуйте repository у `EC2_PROJECT_DIR`, створіть там `.env.production` із правами `600` і переконайтеся, що зовнішня мережа `observability_observability` існує.
+- Встановіть AWS CLI v2, Docker із Compose plugin і `curl`.
+- Додайте `EC2_DEPLOY_USER` до групи `docker`.
+- Розмістіть `compose.production.yml`, `scripts/deploy-ec2.sh`, `observability/alloy/config.alloy` і `.env.production` у `EC2_PROJECT_DIR`. GitHub Actions не оновлює ці файли автоматично.
+- Надайте `.env.production` права `600` і переконайтеся, що зовнішня мережа `observability_observability` існує.
 - ECR repositories мають називатися `money-tracker/api` та `money-tracker/web`.
 - Security Group має дозволяти вхід на `EC2_SSH_PORT` від GitHub Actions runner. GitHub-hosted runners не мають сталої IP-адреси; для вузького allowlist використовуйте self-hosted runner або GitHub runner зі static IP.
 
